@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000"><meta name="description" content="不规则与规则双模式。以真实本地时间驱动的精密轨道时钟。">
+<title>流时 · Orbit clock</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='black' stroke='%23ff674f'/%3E%3Cpath d='M4 17 L16 16 L25 26' fill='none' stroke='%23ffa5d2' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;--gold:#edc65e;--copper:#efa477;--white:#f2f2f1;--muted:#858585}
+*{box-sizing:border-box}body{margin:0;background:#000;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}main{min-height:100svh;display:flex;flex-direction:column;max-width:1440px;margin:auto;padding:32px 48px 24px}header,footer{display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:16px;font-weight:500;letter-spacing:.12em;margin:0}h1 span{color:#777;font-size:12px;margin-left:14px;font-weight:400;letter-spacing:.04em}.status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}.dot{width:4px;height:4px;background:var(--copper);border-radius:50%}.stage{flex:1;display:grid;place-items:center;min-height:0}.instrument{width:min(100%,760px,calc(100svh - 185px));margin:0;position:relative}svg{display:block;width:100%;height:auto;overflow:visible}.ticks{fill:none;stroke:currentColor;stroke-linecap:round;stroke-width:1.2}.numbers{fill:currentColor;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:500;text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}.hour{color:var(--gold)}.minute{color:var(--copper)}.second{color:var(--white)}.rail{fill:none;stroke:currentColor;stroke-width:.6;opacity:.19}.hand{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}.soft{filter:url(#glow);opacity:.65}.caption{font-size:9px;letter-spacing:2px;fill:#737373}.center-label{font-size:9px;letter-spacing:1.4px;fill:#8c7949;text-anchor:middle}.readout{font-variant-numeric:tabular-nums;font-size:15px;letter-spacing:.14em}.readout .h{color:var(--gold)}.readout .m{color:var(--copper)}.readout .s{color:var(--white)}.date{font-size:11px;color:var(--muted);margin-top:7px;letter-spacing:.05em}.tools{display:flex;gap:8px}button{font:inherit;font-size:11px;border:1px solid #303030;color:#aaa;background:#000;border-radius:30px;padding:10px 16px;cursor:pointer}button:hover{color:#fff;border-color:#888}button:focus-visible{outline:2px solid var(--copper);outline-offset:4px}button[aria-pressed=true]{border-color:#906443;color:var(--copper)}.explanation{color:#666;font-size:11px;line-height:1.8;text-align:center;margin:0 0 18px}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.immersive header,.immersive .explanation,.immersive footer>div:first-child,.immersive #motion{visibility:hidden}.immersive .instrument{width:min(100%,850px,calc(100svh - 100px))}@media(max-width:600px){main{padding:24px 20px 20px}h1 span{display:none}.instrument{width:min(100%,calc((100svh - 190px)*.823))}.stage{margin:10px -12px}.status{font-size:10px}footer{align-items:flex-end}.tools{gap:6px}button{padding:10px 12px}.explanation{font-size:10px;margin-bottom:24px}.readout{font-size:14px}.date{font-size:10px}}@media(max-height:520px) and (min-width:600px){main{padding:14px 28px}.instrument{width:calc(100svh - 95px)}.explanation{display:none}}
+.mode-switch{display:flex;justify-content:center;gap:4px;margin:18px auto 0;padding:3px;border:1px solid #252525;border-radius:30px}.mode-switch button{border-color:transparent;padding:7px 16px}.mode-switch button[aria-pressed=true]{background:#17130e;border-color:#604f32;color:var(--gold)}.immersive .mode-switch{visibility:hidden}.instrument{width:min(100%,760px,calc(100svh - 225px))}body[data-mode="circles"] .instrument{width:min(100%,760px,calc(100svh - 225px))}@media(max-width:600px){.instrument{width:min(100%,calc((100svh - 235px)*.823))}body[data-mode="circles"] .instrument{width:min(100%,calc((100svh - 235px)*.823))}.mode-switch{margin-top:18px}.mode-switch button{padding:7px 14px}}@media(max-height:520px) and (min-width:600px){.mode-switch{position:absolute;left:24px;top:48px;margin:0}.instrument,body[data-mode="circles"] .instrument{width:calc(100svh - 105px)}}
+</style>
+</head>
+<body data-mode="irregular">
+<main>
+<header><h1>流时 <span>Orbit clock</span></h1><div class="status"><i class="dot"></i><span id="zone">本地时间</span></div></header>
+<nav class="mode-switch" aria-label="表盘效果"><button id="mode-irregular" aria-pressed="true">不规则</button><button id="mode-circles" aria-pressed="false">规则</button></nav>
+<section class="stage" aria-label="双模式动态时钟">
+<figure class="instrument">
+<svg viewBox="0 0 760 760" role="img" aria-labelledby="dial-title dial-desc">
+<title id="dial-title">流时，固定指针轨道时钟</title><desc id="dial-desc">中央金色圆形显示小时，右下亮铜色曲线显示分钟，左侧白色曲线显示秒钟。数字和刻度沿闭合轨道经过固定指针。下方提供数字时间。</desc>
+<defs><filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter>
+<!-- Each noncircular path is closed. The return section is deliberately outside the visible reading window. -->
+<linearGradient id="hour-metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff2bf"/><stop offset=".47" stop-color="#d9b44f"/><stop offset=".5" stop-color="#fff0a8"/><stop offset=".51" stop-color="#6b501c"/><stop offset="1" stop-color="#ba9139"/></linearGradient>
+<linearGradient id="minute-metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe9d8"/><stop offset=".47" stop-color="#d99061"/><stop offset=".5" stop-color="#ffdab8"/><stop offset=".51" stop-color="#683b28"/><stop offset="1" stop-color="#b8734b"/></linearGradient>
+<radialGradient id="pivot-metal" cx="30%" cy="22%"><stop stop-color="#fff4ee"/><stop offset=".3" stop-color="#c8b7bd"/><stop offset=".7" stop-color="#62545e"/><stop offset="1" stop-color="#28232b"/></radialGradient>
+<path id="seconds-path" d="M 220,100 C 196,225 190,400 224,545 C 241,621 252,654 265,685 C 350,970 1400,1250 1500,300 C 1600,-650 400,-900 220,100 Z"/>
+<path id="minutes-path" d="M 205,596 C 315,560 430,506 512,427 C 566,375 600,323 617,270 C 720,0 1450,-750 1710,250 C 2000,1500 80,1550 205,596 Z"/>
+<path id="hours-path" d="M 404,244 A 94,94 0 1,1 404,432 A 94,94 0 1,1 404,244 Z"/>
+</defs>
+<g id="irregular-dial">
+<g id="seconds" class="second"></g><g id="minutes" class="minute"></g><g id="hours" class="hour"></g>
+<g id="pointers">
+<!-- Traditional dauphine hands: tapered silhouettes with a polished central ridge. -->
+<g class="second">
+<path d="M195 353 L410 336.95 L421 336.3" fill="none" stroke="#e8e6e4" stroke-width=".85" stroke-linecap="round"/>
+<path d="M199 352.65 L400 338.25" fill="none" stroke="#fff" stroke-width=".25"/>
+<circle cx="424" cy="336.56" r="3.15" fill="#050505" stroke="#b9b8b7" stroke-width=".7"/>
+<circle cx="424" cy="336.56" r="1.7" fill="none" stroke="#5a595b" stroke-width=".35"/>
+</g>
+<g class="hour" transform="translate(404 338) rotate(-90)">
+<path d="M-9 -1.05 L0 -1.4 L15 -2.8 L94 0 L15 2.8 L0 1.4 L-9 1.05 Z" fill="url(#hour-metal)" stroke="#ffe4a0" stroke-width=".42" stroke-linejoin="round"/>
+<path d="M15 -2.8 L94 0 L15 0 Z" fill="#ffe4a0" opacity=".24"/>
+<path d="M15 2.8 L94 0 L15 0 Z" fill="#1c131b" opacity=".26"/>
+<path d="M6 0 L92 0" fill="none" stroke="#ffe4a0" stroke-width=".35"/>
+<path d="M17 -.65 L76 -.12" fill="none" stroke="#fff8ee" stroke-width=".22" opacity=".8"/>
+</g>
+<g class="minute" transform="translate(404 338) rotate(46.6523047)">
+<path d="M-9 -1.05 L0 -1.4 L15 -2.05 L147.13939 0 L15 2.05 L0 1.4 L-9 1.05 Z" fill="url(#minute-metal)" stroke="#ffd1ad" stroke-width=".42" stroke-linejoin="round"/>
+<path d="M15 -2.05 L147.13939 0 L15 0 Z" fill="#ffd1ad" opacity=".24"/>
+<path d="M15 2.05 L147.13939 0 L15 0 Z" fill="#1c131b" opacity=".26"/>
+<path d="M6 0 L145.13939 0" fill="none" stroke="#ffd1ad" stroke-width=".35"/>
+<path d="M17 -.65 L129.13939 -.12" fill="none" stroke="#fff8ee" stroke-width=".22" opacity=".8"/>
+</g>
+<circle cx="404" cy="338" r="4.3" fill="url(#pivot-metal)" stroke="#d9c7ce" stroke-width=".5"/>
+<circle cx="404" cy="338" r="2.8" fill="#1b171d" stroke="#7f737d" stroke-width=".55"/>
+<circle cx="404" cy="338" r="1.5" fill="url(#pivot-metal)"/>
+<path d="M403.2 338.8 L404.8 337.2" stroke="#342b33" stroke-width=".45" stroke-linecap="round"/>
+</g>
+</g>
+<g id="circle-dial" style="display:none"><g id="circle-scales"></g><g id="circle-hands"></g></g>
+</svg>
+</figure>
+</section>
+<p class="explanation">指针静止，时间沿轨道流动。</p>
+<footer><div><div class="readout" id="readout" role="timer" aria-live="off"></div><div class="date" id="date"></div></div><div class="tools"><button id="motion" aria-pressed="false">降低动态</button><button id="focus" aria-pressed="false" title="按 Esc 退出沉浸">沉浸</button></div></footer>
+<noscript>请启用 JavaScript 以显示实时动态时钟。</noscript>
+</main>
+<script>
+'use strict';
+(() => {
+const NS='http://www.w3.org/2000/svg', mod=(a,b)=>(a%b+b)%b;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);parent.append(e);return e;}
+// Sample arc length once. Animation interpolates this table, avoiding SVG geometry queries per frame.
+function geometry(path){const length=path.getTotalLength(), count=8192, points=[];for(let i=0;i<=count;i++){const p=path.getPointAtLength(i*length/count);points.push([p.x,p.y]);}return {length,at(s){const f=mod(s,length)/length*count,i=Math.floor(f),t=f-i;return {x:points[i][0]*(1-t)+points[i+1][0]*t,y:points[i][1]*(1-t)+points[i+1][1]*t};}};}
+function nearest(g,x,y){let best=Infinity,s=0;for(let i=0;i<8192;i++){const d=i*g.length/8192,p=g.at(d),q=(p.x-x)**2+(p.y-y)**2;if(q<best){best=q;s=d;}}return s;}
+function track(id,pathId,units,subdiv,target,windowSize,side,font){const group=document.getElementById(id),geo=geometry(document.getElementById(pathId)),anchor=nearest(geo,...target),spacing=geo.length/(units*subdiv),half=windowSize/2;
+ const rail=el('path',{class:'rail'},group);let d='';for(let s=-half;s<=half;s+=2){const p=geo.at(anchor+s);d+=(s===-half?'M':'L')+p.x+','+p.y;}rail.setAttribute('d',d);
+ const pool=[],n=Math.ceil(windowSize/spacing)+3;for(let i=0;i<n;i++){pool.push({line:el('line',{class:'ticks'},group),text:el('text',{class:'numbers','font-size':font},group)});}return {id,geo,anchor,spacing,units,subdiv,half,side,pool,draw(value){
+ // At the fixed anchor: index / subdiv == current continuous time, modulo the cycle.
+ const phase=value*subdiv,first=Math.floor(phase-half/spacing)-1;
+ for(let j=0;j<pool.length;j++){const index=first+j,s=(index-phase)*spacing,{line,text}=pool[j],visible=Math.abs(s)<=half;
+ line.style.display=visible?'':'none';text.style.display='none';if(!visible)continue;
+ const p=geo.at(anchor+s),a=geo.at(anchor+s-.6),b=geo.at(anchor+s+.6),angle=Math.atan2(b.y-a.y,b.x-a.x),nx=-Math.sin(angle)*side,ny=Math.cos(angle)*side,major=mod(index,subdiv)===0,mid=mod(index,subdiv/2)===0,len=major?15:mid?9:4.5,fade=Math.min(1,(half-Math.abs(s))/(half*.16)),alpha=(major?.95:mid?.7:.43)*fade;
+ line.setAttribute('x1',p.x);line.setAttribute('y1',p.y);line.setAttribute('x2',p.x+nx*len);line.setAttribute('y2',p.y+ny*len);line.setAttribute('opacity',alpha);
+ if(major){const v=mod(index/subdiv,units);text.textContent=id==='hours'?(v||12):String(v).padStart(2,'0');const x=p.x+nx*(len+17),y=p.y+ny*(len+17);text.setAttribute('x',x);text.setAttribute('y',y);let rotation=angle*180/Math.PI+90;rotation=mod(rotation+90,180)-90;if(id==='hours')rotation=0;text.setAttribute('transform',`rotate(${rotation} ${x} ${y})`);text.setAttribute('opacity',fade);text.style.display='';}
+ }
+ }};}
+const tracks=[track('seconds','seconds-path',60,10,[195,353],570,-1,23),track('minutes','minutes-path',60,10,[505,445],475,-1,24),track('hours','hours-path',12,5,[404,244],590,1,20)];
+// Concentric mode: scales are built once; only the hand groups rotate.
+const circleScales=document.getElementById('circle-scales'),circleHands=document.getElementById('circle-hands');
+document.getElementById('circle-dial').setAttribute('transform','translate(24 -42)');
+const rings=[{name:'hour',radius:112,units:12,subdiv:5,font:19},{name:'minute',radius:174,units:60,subdiv:5,font:19},{name:'second',radius:236,units:60,subdiv:5,font:18}];
+function polar(radius,angle){return {x:380+radius*Math.sin(angle),y:380-radius*Math.cos(angle)};}
+for(const ring of rings){const g=el('g',{class:ring.name,'data-ring':ring.name},circleScales);el('circle',{cx:380,cy:380,r:ring.radius,class:'rail'},g);const count=ring.units*ring.subdiv;
+ for(let i=0;i<count;i++){const angle=i/count*Math.PI*2,major=i%(count/12)===0,medium=i%ring.subdiv===0,length=major?14:medium?8:4,outer=polar(ring.radius,angle),inner=polar(ring.radius-length,angle);el('line',{x1:inner.x,y1:inner.y,x2:outer.x,y2:outer.y,class:'ticks','stroke-width':major?1.3:.75,opacity:major?.95:medium?.57:.29},g);
+ if(major){const pos=polar(ring.radius-30,angle),text=el('text',{x:pos.x,y:pos.y,class:'numbers','font-size':ring.font},g);text.textContent=ring.name==='hour'?(i/ring.subdiv||12):String(i/ring.subdiv).padStart(2,'0');}}
+}
+const movingHands={};
+for(const ring of rings){const g=el('g',{class:ring.name,'data-hand':ring.name},circleHands);movingHands[ring.name]=g;const L=ring.radius;
+ if(ring.name==='second'){el('path',{d:`M-26 0 L${L} 0`,stroke:'#e8e6e4','stroke-width':.9,'stroke-linecap':'round',fill:'none'},g);el('circle',{cx:-29,cy:0,r:3.1,fill:'#000',stroke:'#b9b8b7','stroke-width':.7},g);}
+ else {const w=ring.name==='hour'?3.2:2.4,edge=ring.name==='hour'?'#ffe4a0':'#ffd1ad';el('path',{d:`M-10 -1.1 L0 -1.5 L18 -${w} L${L} 0 L18 ${w} L0 1.5 L-10 1.1 Z`,fill:`url(#${ring.name}-metal)`,stroke:edge,'stroke-width':.45,'stroke-linejoin':'round'},g);el('path',{d:`M18 ${w} L${L} 0 L18 0 Z`,fill:'#1c131b',opacity:.28},g);el('path',{d:`M7 0 L${L-2} 0`,fill:'none',stroke:edge,'stroke-width':.4},g);el('path',{d:`M19 -.6 L${L-18} -.12`,fill:'none',stroke:'#fff8ee','stroke-width':.23,opacity:.8},g);}}
+const cap=el('g',{},circleHands);el('circle',{cx:380,cy:380,r:5,fill:'url(#pivot-metal)',stroke:'#d9c7ce','stroke-width':.5},cap);el('circle',{cx:380,cy:380,r:3.1,fill:'#1b171d',stroke:'#7f737d','stroke-width':.55},cap);el('circle',{cx:380,cy:380,r:1.6,fill:'url(#pivot-metal)'},cap);
+// Morph each tick and numeral between its arc-length position and fixed circular position.
+// A reversible progress value drives the ribbon; pivot and responsive viewBox stay fixed.
+const morphRoot=el('g',{id:'morph-dial',style:'display:none'},document.querySelector('svg'));
+const mix=(a,b,t)=>a+(b-a)*t, clamp=x=>Math.max(0,Math.min(1,x)), angleMix=(a,b,t)=>a+(mod(b-a+180,360)-180)*t;
+const smooth=(a,b,t)=>{const x=clamp((t-a)/(b-a));return x*x*x*(10+x*(-15+6*x));};
+// A single ordered ribbon coordinate q controls the entire band. Its two visible
+// ends advance towards +/- half a turn, so the gap closes without scattered ticks.
+function ribbonPoint(source,ring,q,t,phase){const shape=t,handoff=smooth(.08,1,t),half=source.half,arc=q*source.geo.length,bounded=Math.max(-half,Math.min(half,arc)),at=source.anchor+bounded,p=source.geo.at(at),a=source.geo.at(at-.5),b=source.geo.at(at+.5),angle=Math.atan2(b.y-a.y,b.x-a.x),extra=(arc-bounded)/source.geo.length*(2*Math.PI*ring.radius),extension=ring.name==='hour'?0:extra*(1-shape),start={x:p.x+Math.cos(angle)*extension,y:p.y+Math.sin(angle)*extension},base=ring.name==='hour'?0:ring.name==='minute'?136.6523047:265.895,theta=(base+(ring.name==='hour'?q:-q)*360+phase*handoff)*Math.PI/180,target0=polar(ring.radius,theta),target={x:target0.x+24,y:target0.y-42};
+ if(ring.name==='hour'){const r=mix(94,ring.radius,shape),cx=404,cy=338;return {x:cx+r*Math.sin(theta),y:cy-r*Math.cos(theta)};}
+ return {x:mix(start.x,target.x,shape),y:mix(start.y,target.y,shape)};}
+// Interpolate a continuous tangent field, then integrate it by arc length.
+// This controls curvature directly instead of mixing two sets of XY positions.
+function ribbonSamples(source,ring,t,phase,extent,count){
+ if(ring.name==='hour')return Array.from({length:count+1},(_,i)=>ribbonPoint(source,ring,mix(-extent,extent,i/count),t,phase));
+ // Smooth the source tangent field once; the hidden return-path join must not
+ // create a concentrated curvature spike when that part of the belt is revealed.
+ if(!source.tangentField){const count=512,low=-source.half-48,high=source.half+48,step=(high-low)/count,raw=[];for(let i=0;i<=count;i++){const s=low+i*step,a=source.geo.at(source.anchor+s-3),b=source.geo.at(source.anchor+s+3),angle=Math.atan2(b.y-a.y,b.x-a.x);raw.push(i?raw[i-1]+mod(angle-raw[i-1]+Math.PI,Math.PI*2)-Math.PI:angle);}const sigma=14/step,radius=Math.ceil(sigma*3),filtered=raw.map((_,i)=>{let sum=0,weight=0;for(let j=-radius;j<=radius;j++){const w=Math.exp(-j*j/(2*sigma*sigma));sum+=raw[Math.max(0,Math.min(count,i+j))]*w;weight+=w;}return sum/weight;});source.tangentField={at(s){const f=clamp((s-low)/(high-low))*count,i=Math.min(count-1,Math.floor(f)),t=f-i;return mix(filtered[i],filtered[i+1],t);}};}
+ const tangent=s=>source.tangentField.at(s),reference=tangent(0),unwrap=a=>reference+mod(a-reference+Math.PI,Math.PI*2)-Math.PI;
+ function sourceAngle(q){const arc=q*source.geo.length,bounded=Math.max(-source.half,Math.min(source.half,arc)),angle=unwrap(tangent(bounded)),extra=arc-bounded;if(!extra)return angle;const before=tangent(bounded-4),after=tangent(bounded+4),curvature=(mod(after-before+Math.PI,Math.PI*2)-Math.PI)/8,decay=36;return angle+curvature*Math.sign(extra)*decay*(1-Math.exp(-Math.abs(extra)/decay));}
+ const base=ring.name==='minute'?136.6523047:265.895,handoff=smooth(.08,1,t),clock=(base+phase*handoff)*Math.PI/180,targetReference=unwrap(clock+Math.PI),length=mix(source.half*2,2*Math.PI*ring.radius,t),step=length/count,points=[{x:0,y:0}];
+ for(let i=1;i<=count;i++){const q=mix(-extent,extent,(i-.5)/count),angle=mix(sourceAngle(q),targetReference-q*Math.PI/extent,t),previous=points[i-1];points.push({x:previous.x+Math.cos(angle)*step,y:previous.y+Math.sin(angle)*step});}
+ const start=source.geo.at(source.anchor),target=polar(ring.radius,clock),anchor={x:mix(start.x,target.x+24,t),y:mix(start.y,target.y-42,t)},middle=points[count/2],dx=anchor.x-middle.x,dy=anchor.y-middle.y;
+ return points.map(p=>({x:p.x+dx,y:p.y+dy}));
+}
+// The same measured geometry drives the rail, ticks, normals and numerals.
+function ribbonMetric(source,ring,t,phase,extent){const samples=512,points=ribbonSamples(source,ring,t,phase,extent,samples),distances=[0];for(let i=1;i<=samples;i++)distances.push(distances[i-1]+Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y));
+ const center=distances[samples/2],total=distances[samples],idealCycle=Math.exp(mix(Math.log(source.geo.length),Math.log(2*Math.PI*ring.radius),t)),cycle=mix(idealCycle,total/(2*extent),smooth(.48,.88,t)),closed=extent>=.5-1e-8&&t>=1-1e-8;
+ // A continuous rail traces the real free ends; there is no replacement closing segment.
+ const path=points.map((p,i)=>(i?'L':'M')+p.x+','+p.y).join('');
+ function at(distance){const d=closed?mod(distance,total):Math.max(0,Math.min(total,distance));let lo=0,hi=samples;while(hi-lo>1){const mid=(lo+hi)>>1;if(distances[mid]<d)lo=mid;else hi=mid;}const f=(d-distances[lo])/Math.max(.000001,distances[hi]-distances[lo]);return {x:mix(points[lo].x,points[hi].x,f),y:mix(points[lo].y,points[hi].y,f)};}
+ return {cycle,path,closed,point:q=>at(center+q*cycle),visibility(q){if(closed)return 1;const distance=center+q*cycle,fade=Math.max(.0001,mix(source.half*.16,16,smooth(0,.96,t))*(1-smooth(.84,.96,t)));return clamp(Math.min(distance,total-distance)/fade);},pose(q){const d=center+q*cycle,p=at(d),a=at(d-.4),b=at(d+.4),normal=Math.atan2(b.y-a.y,b.x-a.x)+Math.PI/2+(source.side<0?Math.PI:0);return {...p,normal};}};
+}
+const morphRings=rings.map((ring,j)=>{const source=tracks[2-j],g=el('g',{class:ring.name},morphRoot),marks=[],labels=[],count=ring.units*source.subdiv;const continuousRail=el('path',{class:'rail','data-continuous-rail':ring.name},g);
+ for(let i=0;i<count;i++)marks.push({index:i,line:el('line',{class:'ticks'},g),rail:el('line',{class:'rail'},g)});
+ for(let i=0;i<ring.units;i++){const text=el('text',{class:'numbers'},g);text.textContent=ring.name==='hour'?(i||12):String(i).padStart(2,'0');const incoming=el('text',{class:'numbers','data-label-role':'incoming'},g);incoming.textContent=text.textContent;text.setAttribute('data-label-role','outgoing');labels.push({index:i,text,incoming});}
+ return {ring,source,marks,labels,continuousRail};});
+const morphHandRoot=el('g',{},morphRoot),morphHands={};
+for(const ring of rings){const outer=el('g',{},morphHandRoot),inner=movingHands[ring.name].cloneNode(true);inner.removeAttribute('data-hand');outer.append(inner);morphHands[ring.name]={outer,inner};}
+const morphCap=cap.cloneNode(true);morphHandRoot.append(morphCap);
+let mode='irregular',progress=0,transition=null;
+const mobile=matchMedia('(max-width:600px)');
+function fit(){document.querySelector('svg').setAttribute('viewBox',mobile.matches?'125 65 535 650':'0 0 760 760');}
+mobile.addEventListener('change',fit);fit();
+function sourcePoint(source,unit,value){const delta=mod(unit-value+source.units/2,source.units)-source.units/2,arc=delta*source.geo.length/source.units,bounded=Math.max(-source.half-25,Math.min(source.half+25,arc)),at=source.anchor+bounded,p=source.geo.at(at),a=source.geo.at(at-.6),b=source.geo.at(at+.6),normal=Math.atan2(b.y-a.y,b.x-a.x)+Math.PI/2+(source.side<0?Math.PI:0);return {x:p.x,y:p.y,normal,alpha:clamp((source.half-Math.abs(arc))/(source.half*.16))};}
+function drawMorph(v,t){
+ morphRoot.dataset.progress=t;
+ const shape=t,handoff=smooth(.08,1,t),sourceAngles={hour:-90,minute:46.6523047,second:175.895},lengths={hour:94,minute:147.13939,second:209.53759},valuesByName={hour:v[2]*30-90,minute:v[1]*6-90,second:v[0]*6-90};
+ transition.handAngles??={};transition.bandPhases??={};transition.gridOffsets??={};
+ for(const {ring,source,marks,labels,continuousRail} of morphRings){
+  const value=v[ring.name==='hour'?2:ring.name==='minute'?1:0],count=marks.length,raw=valuesByName[ring.name],previous=transition.handAngles[ring.name]??angleMix(sourceAngles[ring.name],raw,1),target=raw+360*Math.round((previous-raw)/360);transition.handAngles[ring.name]=target;
+  const isHour=ring.name==='hour',base=isHour?0:ring.name==='minute'?136.6523047:265.895,step=360/count;
+  // Keep one material grid through the transition. Final hierarchy is assigned by
+  // its actual clock position, rather than by its unrelated source tick index.
+  transition.gridOffsets[ring.name]??=Math.round((base+value/ring.units*360)/step);
+  const offset=transition.gridOffsets[ring.name],phaseRaw=offset*step-base-value/ring.units*360,phasePrevious=transition.bandPhases[ring.name]??phaseRaw,phase=isHour?target-sourceAngles.hour:phaseRaw+360*Math.round((phasePrevious-phaseRaw)/360);transition.bandPhases[ring.name]=phase;
+  const initial=source.half/source.geo.length,extent=isHour?.5:mix(initial,.5,t),metric=ribbonMetric(source,ring,t,phase,extent),{pose,visibility}=metric,destinationStep=2*Math.PI*ring.radius/count,merge=smooth(destinationStep*2,destinationStep*1.02,metric.cycle/count);
+  continuousRail.setAttribute('d',metric.path);
+  for(const {index:i,line,rail} of marks){
+   const q=mod(i/count-value/ring.units+.5,1)-.5,p=pose(q),alpha=visibility(q),sourceMajor=i%source.subdiv===0,sourceMid=i%(source.subdiv/2)===0,slot=isHour?i:mod(offset-i,count),stride=source.subdiv/ring.subdiv,destVisible=slot%stride===0,destMajor=slot%(count/12)===0,destMedium=slot%source.subdiv===0;
+   const sourceLength=sourceMajor?15:sourceMid?9:4.5,destLength=destMajor?14:destMedium?8:4,len=mix(sourceLength,destLength,t),sourceOpacity=sourceMajor?.95:sourceMid?.7:.43,destOpacity=destMajor?.95:destMedium?.57:.29,opacity=alpha*(destVisible?mix(sourceOpacity,destOpacity,t):sourceOpacity*(1-merge)),normal=p.normal;
+   line.setAttribute('x1',p.x);line.setAttribute('y1',p.y);line.setAttribute('x2',p.x+Math.cos(normal)*len);line.setAttribute('y2',p.y+Math.sin(normal)*len);line.setAttribute('opacity',opacity);line.setAttribute('stroke-width',mix(1.2,destMajor?1.3:.75,t));rail.style.display='none';
+  }
+  const labelBlend=smooth(.18,.82,t);
+  const labelCandidates=[];
+  function placeLabel(text,q,font,weight,upright){const p=pose(q),offset=mix(32,30,t),x=p.x+Math.cos(p.normal)*offset,y=p.y+Math.sin(p.normal)*offset,localRotation=isHour?0:mod(p.normal*180/Math.PI+90,180)-90; text.setAttribute('x',x);text.setAttribute('y',y);text.setAttribute('font-size',font);text.setAttribute('transform',`rotate(${mix(localRotation,0,upright)} ${x} ${y})`);const alpha=weight*visibility(q);text.setAttribute('opacity',alpha);labelCandidates.push({text,x,y,font,alpha});}
+  for(const {index:i,text,incoming} of labels){
+   const qSource=mod(i/ring.units-value/ring.units+.5,1)-.5,originalVisibility=clamp((initial-Math.abs(qSource))/(initial*.16));
+   placeLabel(text,qSource,mix(isHour?20:ring.name==='minute'?24:23,ring.font,t),(isHour?1:1-labelBlend)*(isHour?1:originalVisibility),t);
+   // Incoming numbers travel on the same measured ribbon; none teleport to a
+   // detached polar position while hidden. Sparse target labels appear at its ends.
+   const theta=i/ring.units*360,sign=isHour?1:-1,qTarget=mod(sign*(theta-base-phase*handoff)/360+.5,1)-.5,destLabel=isHour||i%5===0;
+   placeLabel(incoming,qTarget,ring.font,destLabel&&!isHour?labelBlend:0,t);
+  }
+  const placed=[];for(const label of labelCandidates.sort((a,b)=>b.alpha-a.alpha)){if(label.alpha<.01)continue;let clear=1;for(const other of placed){const distance=Math.hypot(label.x-other.x,label.y-other.y),separation=(label.font+other.font)*.65;clear=Math.min(clear,smooth(separation*.6,separation,distance));}label.text.setAttribute('opacity',label.alpha*clear);if(label.alpha*clear>.18)placed.push(label);}
+  const h=morphHands[ring.name],angle=mix(sourceAngles[ring.name],target,handoff);h.outer.setAttribute('transform',`translate(404 338) rotate(${angle})`);h.inner.setAttribute('transform',`scale(${mix(lengths[ring.name]/ring.radius,1,t)} 1)`);
+ }
+ morphCap.setAttribute('transform','translate(24 -42)');fit();
+}
+
+function settle(){transition=null;document.getElementById('irregular-dial').style.opacity='1';document.getElementById('circle-dial').style.opacity='1';morphRoot.style.opacity='1';progress=mode==='circles'?1:0;morphRoot.style.display='none';document.getElementById('irregular-dial').style.display=mode==='irregular'?'':'none';document.getElementById('circle-dial').style.display=mode==='circles'?'':'none';document.querySelector('svg').removeAttribute('aria-busy');fit();}
+function setMode(next){if(next===mode)return;mode=next;document.body.dataset.mode=mode;for(const name of ['irregular','circles'])document.getElementById('mode-'+name).setAttribute('aria-pressed',String(mode===name));document.querySelector('.explanation').textContent=mode==='circles'?'刻度静止，指针随时间流转。':'指针静止，时间沿轨道流动。';document.getElementById('dial-title').textContent=mode==='circles'?'流时，规则腕表时钟':'流时，固定指针轨道时钟';document.getElementById('dial-desc').textContent=mode==='circles'?'从内向外为金色小时圈、亮铜色分钟圈、银白色秒钟圈。刻度固定，三根指针顺时针连续转动。':'中央金色圆形显示小时，右下亮铜色曲线显示分钟，左侧白色曲线显示秒钟。刻度流过固定指针。';
+ if(reduced){settle();render();return;}transition={initialVelocity:transition?.velocity||0,velocity:transition?.velocity||0,handAngles:transition?.handAngles||null,bandPhases:transition?.bandPhases||null,gridOffsets:transition?.gridOffsets||null,from:progress,to:mode==='circles'?1:0,start:performance.now(),duration:1800*Math.max(.2,Math.abs((mode==='circles'?1:0)-progress))};document.getElementById('irregular-dial').style.display='none';document.getElementById('circle-dial').style.display='none';morphRoot.style.display='';document.querySelector('svg').setAttribute('aria-busy','true');render();}
+document.getElementById('mode-irregular').addEventListener('click',()=>setMode('irregular'));document.getElementById('mode-circles').addEventListener('click',()=>setMode('circles'));
+const media=matchMedia('(prefers-reduced-motion: reduce)'),motion=document.getElementById('motion'),focus=document.getElementById('focus');let reduced=media.matches,timer=0,raf=0,lastSecond='',lastStamp=0;
+function values(date){const sec=date.getSeconds()+date.getMilliseconds()/1000,min=date.getMinutes()+sec/60,hour=date.getHours()%12+min/60;return [sec,min,hour];}
+function render(date=new Date()){const v=values(date);if(transition){const raw=clamp((performance.now()-transition.start)/transition.duration),r2=raw*raw,r3=r2*raw,duration=transition.duration;progress=clamp((2*r3-3*r2+1)*transition.from+(r3-2*r2+raw)*duration*transition.initialVelocity+(-2*r3+3*r2)*transition.to);transition.velocity=((6*r2-6*raw)*transition.from+(3*r2-4*raw+1)*duration*transition.initialVelocity+(-6*r2+6*raw)*transition.to)/duration;if(raw>=1){settle();render(date);return;}drawMorph(v,progress);
+ // Match the real endpoint artwork briefly while geometry remains the main transition.
+ const startBlend=1-smooth(0,.065,progress),endBlend=0,original=document.getElementById('irregular-dial'),circles=document.getElementById('circle-dial');
+ original.style.display=startBlend>0?'':'none';original.style.opacity=startBlend;circles.style.display=endBlend>0?'':'none';circles.style.opacity=endBlend;morphRoot.style.opacity=1-Math.max(startBlend,endBlend);
+ if(startBlend>0)tracks.forEach((track,i)=>track.draw(v[i]));if(endBlend>0){const angles={hour:v[2]*30-90,minute:v[1]*6-90,second:v[0]*6-90};for(const [name,angle] of Object.entries(angles))movingHands[name].setAttribute('transform',`translate(380 380) rotate(${angle})`);}
+ }else if(mode==='irregular')tracks.forEach((t,i)=>t.draw(v[i]));else {const angles={hour:v[2]*30-90,minute:v[1]*6-90,second:v[0]*6-90};for(const [name,angle] of Object.entries(angles))movingHands[name].setAttribute('transform',`translate(380 380) rotate(${angle})`);}const stamp=date.toDateString()+' '+date.getHours()+':'+date.getMinutes()+':'+date.getSeconds();if(stamp!==lastSecond){lastSecond=stamp;const pad=n=>String(n).padStart(2,'0');document.getElementById('readout').innerHTML=`<span class="h">${pad(date.getHours()%12||12)}</span> : <span class="m">${pad(date.getMinutes())}</span> : <span class="s">${pad(date.getSeconds())}</span><span style="font-size:9px;color:#777;letter-spacing:0;margin-left:9px">${date.getHours()<12?'AM':'PM'}</span>`;document.getElementById('date').textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'short'}).format(date);}}
+function stop(){cancelAnimationFrame(raf);clearTimeout(timer);}
+function frame(stamp){if(document.hidden)return;if(!lastStamp||stamp-lastStamp>=15){render();lastStamp=stamp;}raf=requestAnimationFrame(frame);}
+function tick(){render();timer=setTimeout(tick,1000-mod(Date.now(),1000)+5);}
+function start(){stop();lastStamp=0;if(document.hidden)return;render();if(reduced)tick();else raf=requestAnimationFrame(frame);}
+function setReduced(v){reduced=v;if(v&&transition)settle();motion.setAttribute('aria-pressed',String(v));motion.textContent=v?'恢复流动':'降低动态';start();}
+motion.addEventListener('click',()=>setReduced(!reduced));media.addEventListener('change',e=>setReduced(e.matches));document.addEventListener('visibilitychange',start);
+function immersive(v){document.body.classList.toggle('immersive',v);focus.setAttribute('aria-pressed',String(v));focus.textContent=v?'退出沉浸':'沉浸';}
+focus.addEventListener('click',()=>immersive(!document.body.classList.contains('immersive')));document.addEventListener('keydown',e=>{if(e.key==='Escape')immersive(false);});
+document.getElementById('zone').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll('_',' ');setReduced(reduced);
+// Read-only geometry and alignment diagnostics, useful for deterministic browser verification.
+window.clockDiagnostics={values,inspect(date){return tracks.map((t,i)=>{const value=values(date)[i],index=value*t.subdiv,s=t.anchor+(index-value*t.subdiv)*t.spacing;return {track:t.id,value,anchor:t.geo.at(t.anchor),reading:t.geo.at(s),length:t.geo.length};});}};
+})();
+</script>
+</body>
+</html>
