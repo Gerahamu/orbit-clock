@@ -4,12 +4,14 @@
 
 ## 网页成品
 
+**在线预览：** [打开时钟主页](https://gerahamu.github.io/orbit-clock/) · [2D 版本](https://gerahamu.github.io/orbit-clock/2d/) · [3D 版本](https://gerahamu.github.io/orbit-clock/3d/)
+
 | 版本 | 页面 | 特点 |
 | --- | --- | --- |
 | 2D | [`2d/index.html`](2d/index.html) | SVG 绘制、轻量响应式布局、平滑形态转场 |
 | 3D | [`3d/index.html`](3d/index.html) | WebGL 金属质感、可交互视角、内嵌渲染库与字形 |
 
-GitHub 的文件页面会显示 HTML 源码。想实际体验时，下载对应的 `index.html`，再按下方说明用浏览器打开。
+GitHub Pages 在线托管这三个静态网页，无需下载，也无需另行准备服务器。GitHub 的文件页面仍会显示源码；可通过上方预览链接直接体验。
 
 ## 两种表盘模式
 
@@ -59,6 +61,7 @@ python3 -m http.server 8766 --bind 127.0.0.1
 
 ```text
 .
+├── index.html                     # GitHub Pages 入口
 ├── 2d/
 │   └── index.html                 # 自包含 SVG 时钟
 ├── 3d/

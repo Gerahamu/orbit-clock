@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080807">
+  <meta name="description" content="流时 Orbit Clock：一组受 Apple Watch Exactograph 表盘启发的 2D 与 3D 动态时钟实验。">
+  <title>流时 · Orbit Clock</title>
+  <style>
+    :root { color-scheme: dark; --bg: #080807; --gold: #d9b65c; --copper: #df8d5c; --muted: #99948a; }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100svh; margin: 0; padding: 32px 22px; display: grid; place-items: center;
+      color: #eee9de; background: radial-gradient(ellipse at 50% 38%, #17140f 0, #0b0a08 34%, var(--bg) 72%);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main { width: min(760px, 100%); text-align: center; }
+    .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: .28em; text-transform: uppercase; }
+    h1 { margin: 16px 0 8px; font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(42px, 9vw, 72px); letter-spacing: .05em; }
+    .intro { margin: 0 auto; max-width: 500px; color: #aaa59b; line-height: 1.8; font-size: 14px; }
+    .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 44px 0 26px; text-align: left; }
+    a.card { min-height: 176px; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; color: inherit; text-decoration: none; border: 1px solid #55452c; border-radius: 3px; background: linear-gradient(145deg, #17140f, #0d0c0a 72%); transition: border-color .25s ease, transform .25s ease, background .25s ease; }
+    a.card:hover, a.card:focus-visible { border-color: var(--gold); transform: translateY(-3px); background: linear-gradient(145deg, #211b11, #0d0c0a 72%); outline: none; }
+    .tag { color: var(--copper); font-size: 10px; letter-spacing: .22em; }
+    h2 { margin: 12px 0 5px; font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: 25px; }
+    .detail { color: #a49f95; font-size: 12px; line-height: 1.7; }
+    .open { margin-top: 15px; color: var(--gold); font-size: 12px; letter-spacing: .08em; }
+    footer { color: #68645d; font-size: 11px; line-height: 1.8; }
+    footer a { color: #a69a7c; }
+    @media (max-width: 520px) { .choices { grid-template-columns: 1fr; margin-top: 32px; } a.card { min-height: 148px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">A kinetic timepiece study</div>
+    <h1>流时</h1>
+    <p class="intro">以轨道、刻度与指针重新组织读时方式。选择一个版本，在浏览器中直接体验。</p>
+    <nav class="choices" aria-label="选择时钟版本">
+      <a class="card" href="./2d/">
+        <div>
+          <div class="tag">01 · SVG / 2D</div>
+          <h2>二维表盘</h2>
+          <div class="detail">不规则流动轨道与规则三圈 · 轻量、清晰</div>
+        </div>
+        <div class="open">打开预览 ↗</div>
+      </a>
+      <a class="card" href="./3d/">
+        <div>
+          <div class="tag">02 · WEBGL / 3D</div>
+          <h2>三维表盘</h2>
+          <div class="detail">金属雕刻质感 · 可拖动视角与缩放</div>
+        </div>
+        <div class="open">打开预览 ↗</div>
+      </a>
+    </nav>
+    <footer>
+      个人兴趣设计实验，灵感参考 Apple Watch Exactograph 表盘；非 Apple 官方产品。<br>
+      <a href="https://github.com/Gerahamu/orbit-clock">查看 GitHub 项目与源码</a>
+    </footer>
+  </main>
+</body>
+</html>
